@@ -16,7 +16,7 @@ exports.handler = function (event, context) {
             let options = {};
             if (request.intent.name === "HelloIntent") {
                 let name = request.intent.slots.FirstName.value;
-                options.speechText = "Hello " + name + ". ";
+                options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
                 options.speechText += getWish();
                 getQuote(function (quote, err) {
                     if (err) {
