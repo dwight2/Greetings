@@ -1,1 +1,8 @@
 HelloIntent say hello to {FirstName}
+
+QuoteIntent tell me a quote
+
+NextQuoteIntent yes
+NextQuoteIntent more
+NextQuoteIntent another one
+

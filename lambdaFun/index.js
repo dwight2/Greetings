@@ -5,29 +5,23 @@ var http = require('http');
 exports.handler = function (event, context) {
     try {
         var request = event.request;
+        var session = event.session;
+
+        if (!session.attributes) {
+            session.attributes = {};
+        }
 
         if (request.type === "LaunchRequest") {
-            let options = {};
-            options.speechText = "Welcome to Greetings skill. Whom do you wish me to greet?";
-            options.repromptText = "I am sorry, please tell me whom do you wish to greet. For example, you could say Alexa, say Hello to John.";
-            options.endSession = false;
-            context.succeed(buildResponse(options));
+            handleLaunchRequest(context);
         } else if (request.type === "IntentRequest") {
-            let options = {};
             if (request.intent.name === "HelloIntent") {
-                let name = request.intent.slots.FirstName.value;
-                options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
-                options.speechText += getWish();
-                getQuote(function (quote, err) {
-                    if (err) {
-                        context.fail(err);
-                    } else {
-                        options.speechText += quote;
-                        options.endSession = true;
-                        context.succeed(buildResponse(options));
-                    }
-                });
+                handleHelloIntent(request, context);
 
+            } else if (request.intent.name === "QuoteIntent") {
+                handleQuoteIntent(request, context, session);
+
+            } else if (request.intent.name === "NextQuoteIntent") {
+                handleNextQuoteIntent(request, context, session);
             } else {
                 throw "Unknown intent";
             }
@@ -95,5 +89,71 @@ function buildResponse(options) {
             }
         };
     }
+    if (options.session && options.session.attributes) {
+        response.sessionAttributes = options.session.attributes;
+    }
     return response;
+}
+
+function handleLaunchRequest(context) {
+    let options = {};
+    options.speechText = "Welcome to Greetings skill. Whom do you wish me to greet?";
+    options.repromptText = "I am sorry, please tell me whom do you wish to greet. For example, you could say Alexa, say Hello to John.";
+    options.endSession = false;
+    context.succeed(buildResponse(options));
+}
+
+function handleHelloIntent(request, context) {
+    let options = {};
+    let name = request.intent.slots.FirstName.value;
+    options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
+    options.speechText += getWish();
+    getQuote(function (quote, err) {
+        if (err) {
+            context.fail(err);
+        } else {
+            options.speechText += quote;
+            options.endSession = true;
+            context.succeed(buildResponse(options));
+        }
+    });
+}
+
+function handleQuoteIntent(request, context, session) {
+    let options = {};
+    options.session = session;
+    getQuote(function (quote, err) {
+        if (err) {
+            context.fail(err);
+        } else {
+            options.speechText += quote;
+            options.speechText += " Do you want to hear another quote? ";
+            options.repromptText += "You can say yes, more or another one. ";
+            options.session.attributes.quoteIntent = true;
+            options.endSession = false;
+            context.succeed(buildResponse(options));
+        }
+    });
+}
+
+function handleNextQuoteIntent(request, context, session) {
+    let options = {};
+    options.session = session;
+    if (session.attributes.quoteIntent) {
+        getQuote(function (quote, err) {
+            if (err) {
+                context.fail(err);
+            } else {
+                options.speechText += quote;
+                options.speechText += " Do you want to hear another quote? ";
+                options.repromptText += "You can say yes, more or another one. ";
+                options.session.attributes.quoteIntent = true;
+                options.endSession = false;
+                context.succeed(buildResponse(options));
+            }
+        });
+    } else {
+        options.speechText = " Wrong invocation of this intent. ";
+        options.endSession = true;
+    }
 }
