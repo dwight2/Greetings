@@ -94,6 +94,23 @@ function buildResponse(options) {
             }
         };
     }
+    if (options.cardTitle) {
+        response.response.card = {
+            type: "Simple",
+            title: options.cardTitle
+        }
+    }
+    if (options.imageUrl) {
+        response.response.card.type = "Standard";
+        response.response.card.text = options.cardContent;
+        response.response.card.image = {
+            smallImageUrl: options.imageUrl,
+            largeImageUrl: options.imageUrl
+        };
+    } else {
+        response.response.card.content = options.cardContent;
+    }
+
     if (options.session && options.session.attributes) {
         response.sessionAttributes = options.session.attributes;
     }
@@ -113,11 +130,14 @@ function handleHelloIntent(request, context) {
     let name = request.intent.slots.FirstName.value;
     options.speechText = `Hello <say-as interpret-as="spell-out">${name}</say-as> ${name}. `;
     options.speechText += getWish();
+    options.cardTitle = `Hello ${name}`;
     getQuote(function (quote, err) {
         if (err) {
             context.fail(err);
         } else {
             options.speechText += quote;
+            options.cardContent = quote;
+            options.imageUrl = "    ";
             options.endSession = true;
             context.succeed(buildResponse(options));
         }
