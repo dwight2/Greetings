@@ -22,6 +22,11 @@ exports.handler = function (event, context) {
 
             } else if (request.intent.name === "NextQuoteIntent") {
                 handleNextQuoteIntent(request, context, session);
+            } else if (request.intent.name === "StopIntent" || request.intent.name === "CancelIntent") {
+                context.succeed(buildResponse({
+                    speechText: "Good Bye. ",
+                    endSession: true
+                }));
             } else {
                 throw "Unknown intent";
             }
@@ -155,5 +160,6 @@ function handleNextQuoteIntent(request, context, session) {
     } else {
         options.speechText = " Wrong invocation of this intent. ";
         options.endSession = true;
+        context.succeed(buildResponse(options));
     }
 }
