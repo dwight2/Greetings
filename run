@@ -1,0 +1,1 @@
+lambda-local -l lambdaFun/index.js -h handler -e lambdaFun/event.json
