@@ -4,6 +4,9 @@ var http = require('http');
 
 exports.handler = function (event, context) {
     try {
+        if (process.env.NODE_DEBUG_EN) {
+            console.log("Request:\n" + JSON.stringify(event, null, 2));
+        }
         var request = event.request;
         var session = event.session;
 
@@ -76,6 +79,9 @@ function getWish() {
 }
 
 function buildResponse(options) {
+    if (process.env.NODE_DEBUG_EN) {
+        console.log("BuildResponse Options:\n"+JSON.stringify(options, null, 2));
+    }
     var response = {
         version: "1.0",
         response: {
@@ -113,6 +119,9 @@ function buildResponse(options) {
 
     if (options.session && options.session.attributes) {
         response.sessionAttributes = options.session.attributes;
+    }
+    if (process.env.NODE_DEBUG_EN) {
+        console.log("Response:\n" + JSON.stringify(response, null, 2));
     }
     return response;
 }
